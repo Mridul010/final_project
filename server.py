@@ -1,12 +1,19 @@
-from flask import Flask, request, jsonify
-from EmotionDetection.emotion_detection import emotion_detector  # Import your function
+from flask import Flask, request, jsonify, render_template
+from EmotionDetection.emotion_detection import emotion_detector
 
 app = Flask("Emotion Detection")
 
-@app.route("/emotionDetector", methods=["POST"])
+@app.route("/")
+def home():
+    return render_template("index.html")
+
+@app.route("/emotionDetector", methods=["POST", "GET"])
 def emotionDetector():
-    data = request.get_json()
-    text_to_analyze = data.get("text", "")
+    if request.method == "POST":
+        data = request.get_json()
+        text_to_analyze = data.get("text", "") if data else ""
+    else:  # GET request
+        text_to_analyze = request.args.get("textToAnalyze", "")
 
     result = emotion_detector(text_to_analyze)
 
@@ -20,10 +27,7 @@ def emotionDetector():
         f"The dominant emotion is {result['dominant_emotion']}."
     )
 
-    return jsonify({
-        "emotion_scores": result,
-        "response_text": response_text
-    })
+    return response_text
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000)
